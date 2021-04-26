@@ -7,8 +7,8 @@ import requests
 Источник: https://5ka.ru/special_offers/
 Задача организовать сбор данных,
 необходимо иметь метод сохранения данных в .json файлы
-результат: Данные скачиваются с источника, при вызове метода/функции сохранения в файл 
-скачанные данные сохраняются в Json вайлы, для каждой категории товаров должен быть создан отдельный файл 
+результат: Данные скачиваются с источника, при вызове метода/функции сохранения в файл
+скачанные данные сохраняются в Json вайлы, для каждой категории товаров должен быть создан отдельный файл
 и содержать товары исключительно соответсвующие данной категории.
 пример структуры данных для файла:
 нейминг ключей можно делать отличным от примера
@@ -41,16 +41,16 @@ class Parse5ka:
             time.sleep(3)
 
     def run(self):
-        for categories in self._parse(self.star_url, False):
+        for category in self._parse(self.star_url, False):
             url = f'https://5ka.ru/api/v2/special_offers/'
-            self.params['categories'] = categories['parent_group_code']
-            items = []
-            for itm in self._parse(url, True):
-                items = items + itm
-            catalog = {'id': categories['parent_group_code'],
-                        'name': categories['parent_group_name'],
-                        'items': items}
-            file_path = self.save_path.joinpath(f"{categories['parent_group_code']}.json")
+            self.params['categories'] = category['parent_group_code']
+            product = []
+            for i in self._parse(url, True):
+                product = product + i
+            catalog = {'name': category['parent_group_name'],
+                       'code': category['parent_group_code'],
+                       'products': product}
+            file_path = self.save_path.joinpath(f"{category['parent_group_code']}.json")
             self._save(catalog, file_path)
 
     def _parse(self, url: str, is_items):
@@ -63,8 +63,8 @@ class Parse5ka:
                 yield data["results"]
             else:
                 url = None
-                for categories in data:
-                    yield categories
+                for category in data:
+                    yield category
 
     def _save(self, data: dict, file_path):
         file_path.write_text(json.dumps(data, ensure_ascii=False), encoding='UTF-8')
@@ -76,7 +76,7 @@ def get_save_path(dir_name):
     return save_path
 
 if __name__ == '__main__':
-    save_path = get_save_path("products")
+    save_path = get_save_path("catalogs")
     url = 'https://5ka.ru/api/v2/categories/'
     parser = Parse5ka(url, save_path)
     parser.run()
